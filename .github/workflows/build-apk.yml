@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -6,7 +7,7 @@ on:
     paths:
       - 'ios27-liquid-glass-lockscreen-v2-project.zip'
       - '.github/workflows/build-apk.yml'
-Run unzip -q ios27-liquid-glass-lockscreen-v2-project.zip -d project
+
 permissions:
   contents: read
 
@@ -24,7 +25,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -35,8 +35,14 @@ jobs:
         run: |
           sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract Android Studio project
+      - name: Check ZIP file
         run: |
+          ls -lah
+          test -f ios27-liquid-glass-lockscreen-v2-project.zip
+
+      - name: Extract Android project
+        run: |
+          mkdir -p project
           unzip -q ios27-liquid-glass-lockscreen-v2-project.zip -d project
 
       - name: Find Android project directory
@@ -47,14 +53,12 @@ jobs:
           \) -print -quit)
 
           if [ -z "$PROJECT_FILE" ]; then
-            echo "Android Gradle project not found!"
+            echo "Android Gradle project not found"
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$PROJECT_FILE")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-
-          echo "Project directory: $PROJECT_DIR"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -70,24 +74,10 @@ jobs:
             gradle -p "$PROJECT_DIR" assembleDebug --no-daemon
           fi
 
-      - name: Locate APK
-        run: |
-          APK_PATH=$(find "$PROJECT_DIR" -type f \
-            -path '*/build/outputs/apk/debug/*.apk' \
-            -print -quit)
-
-          if [ -z "$APK_PATH" ]; then
-            echo "APK file not found!"
-            exit 1
-          fi
-
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
-          echo "APK generated: $APK_PATH"
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ios27-liquid-glass-lockscreen-debug-apk
-          path: ${{ env.APK_PATH }}
+          path: project/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           
