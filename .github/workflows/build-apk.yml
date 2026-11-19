@@ -6,7 +6,7 @@ on:
     paths:
       - 'ios27-liquid-glass-lockscreen-v2-project.zip'
       - '.github/workflows/build-apk.yml'
-
+Run unzip -q ios27-liquid-glass-lockscreen-v2-project.zip -d project
 permissions:
   contents: read
 
